@@ -42,7 +42,6 @@ but I usually find myself using `sleep` to wait for a command to execute in anot
 - `-m` Mode can be `and`,`or`,`xor`,`not` 
     - for example `and` mode and will only run the second command if the first command exited successfully
     - mode `not` will only run the 2nd command if the first command fails
-    - mode `xor` works for **n>2** commands by running the **n+1** command only if command **n** fails or vice versa (so running **n+1** only if **n** fails)
     - mode `or` doesn't care which is the **default**
 
 # Installation

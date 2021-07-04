@@ -9,6 +9,12 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	MODE_OR  = "or"
+	MODE_NOT = "not"
+	MODE_AND = "and"
+)
+
 func printUsage() {
 	magenta := color.New(color.FgMagenta)
 	blue := color.New(color.FgBlue)
@@ -26,7 +32,7 @@ func handleFlags() {
 
 	flag.Usage = printUsage
 
-	flag.StringVar(&mode, "m", "or", "Mode: or,xor,and,not (see readme)")
+	flag.StringVar(&chain_mode, "m", MODE_OR, "Mode: or,xor,and,not (see readme)")
 	flag.StringVar(&afterCmd, "after", "nil", "if you have already executed a command without using dchn.\n you can tell dchn to run after that command by specifing it here")
 
 	flag.Parse()
@@ -36,10 +42,15 @@ func handleFlags() {
 		os.Exit(2)
 	}
 
+	if !(chain_mode == MODE_OR || chain_mode == MODE_AND || chain_mode == MODE_NOT) {
+		printUsage()
+		os.Exit(2)
+	}
+
 	cmdID = flag.Args()[0]
 	cmd = flag.Args()[1:]
 
-	logger.Debugf("mode: " + mode)
+	logger.Debugf("mode: " + chain_mode)
 	logger.Debugf("cmdID: " + cmdID)
 	logger.Debugf("cmd: " + strings.Join(cmd, " "))
 	logger.Debugf("after cmd: " + afterCmd)

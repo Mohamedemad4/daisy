@@ -1,50 +1,21 @@
 package main
 
 import (
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
+	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/hhkbp2/go-logging"
 )
 
 var logger logging.Logger
-var mode string
+var chain_mode string
 var afterCmd string
 var cmdID string
 var cmd []string
 var CFG_DIR_PATH string
 
-func readCmdIDFiles() {
-	files, err := ioutil.ReadDir(CFG_DIR_PATH)
-	if err != nil {
-		color.Red("unable to open \nthis is probably your first time running this...")
-
-		if _, ok := err.(*os.PathError); ok { //what does this mean?
-			err := os.Mkdir(os.Getenv("HOME")+"/.dchn", 0777)
-			if err != nil {
-				log.Fatal(err)
-			}
-			color.Blue("created ~/.dchn directory")
-		} else {
-			logger.Fatal(err)
-		}
-	}
-
-	for _, file := range files {
-		currCmdFile := filepath.Join(CFG_DIR_PATH, file.Name())
-		if file.Name() == cmdID+".json" {
-			color.Blue("waiting for cmd to execute first")
-			waitForExec()
-		}
-
-		logger.Debugf(currCmdFile)
-
-	}
-
-}
 func main() {
 	// init logger
 	logger = logging.GetLogger("root")
@@ -53,20 +24,45 @@ func main() {
 	logger.SetLevel(logging.LevelDebug)
 
 	handleFlags()
-	readCmdIDFiles()
-}
 
-func waitForExec() {
-	//todo
-	color.Red("NO MORE MR NICE GUY")
-}
+	switch parentState, jsonContents := getCommandParentState(); parentState {
 
-//
-//func executeCommand() {
-//	//todo
-//	color.Red("exec")
-//}
-//
-//func cleanUP() {
-//	//todo also clean orphans with your parent
-//}
+	case DONE:
+		// eval ExitCode and mode
+		exec_cmd := evalExitCode(jsonContents)
+		if exec_cmd {
+			writeCmdIDFile(EXECUTING)
+			executeCommand()
+			writeCmdIDFile(DONE)
+		} else {
+
+			color.New(color.FgBlue).Fprintf(color.Output, "parent command commandID: %s\n %s \nExited with code: %s \nNot Executing",
+				jsonContents.CmdID,
+				color.GreenString(strings.Join(jsonContents.Cmd, " ")),
+				color.RedString(strconv.Itoa(jsonContents.ExitCode)),
+			)
+
+		}
+
+	case NO_PARENT:
+		fmt.Println("no parents")
+		color.New(color.FgBlue).Fprintf(color.Output, "Executing\n %s\n", color.GreenString(strings.Join(cmd, " ")))
+
+		writeCmdIDFile(EXECUTING)
+		executeCommand()
+		writeCmdIDFile(DONE)
+
+	case WAITING, EXECUTING:
+
+		color.New(color.FgBlue).Fprintf(color.Output, "waiting for commandID: %s\n %s\nto execute first\n",
+			jsonContents.CmdID,
+			color.GreenString(strings.Join(jsonContents.Cmd, " ")),
+		)
+
+		waitForExec(jsonContents)
+		executeCommand()
+		writeCmdIDFile(DONE)
+
+	}
+	cleanUP()
+}
