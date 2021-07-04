@@ -1,18 +1,40 @@
 package main
 
 import (
-	"github.com/fatih/color"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
 )
 
 func waitForExec(s CommandConfig) {
-	// uk the drill
-	// while loops and shit
-	color.Red("NO MORE MR NICE GUY")
+	cmdIDFile := filepath.Join(CFG_DIR_PATH, s.CmdID+".json")
+
+	for {
+		jsonContents := readCmdIDFile(cmdIDFile)
+		if jsonContents.CommandState == DONE {
+			break
+		} else {
+			time.Sleep(time.Second * 1)
+		}
+	}
+
 }
 
-func executeCommand() {
-	//todo
-	color.Red("exec comand")
+func executeCommand() int {
+	command := exec.Command(cmd[0])
+	command.Args = cmd[0:]
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	command.Stdin = os.Stdin
+
+	err := command.Run()
+	if err != nil {
+		fmt.Println(err)
+		return 1
+	}
+	return 0
 }
 
 // Check whether or not we should be executed depending on the state of our parent

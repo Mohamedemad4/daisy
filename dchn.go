@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -31,9 +30,9 @@ func main() {
 		// eval ExitCode and mode
 		exec_cmd := evalExitCode(jsonContents)
 		if exec_cmd {
-			writeCmdIDFile(EXECUTING)
-			executeCommand()
-			writeCmdIDFile(DONE)
+			writeCmdState(EXECUTING, NO_EXIT_YET)
+			exit_code := executeCommand()
+			writeCmdState(DONE, exit_code)
 		} else {
 
 			color.New(color.FgBlue).Fprintf(color.Output, "parent command commandID: %s\n %s \nExited with code: %s \nNot Executing",
@@ -45,12 +44,11 @@ func main() {
 		}
 
 	case NO_PARENT:
-		fmt.Println("no parents")
 		color.New(color.FgBlue).Fprintf(color.Output, "Executing\n %s\n", color.GreenString(strings.Join(cmd, " ")))
 
-		writeCmdIDFile(EXECUTING)
-		executeCommand()
-		writeCmdIDFile(DONE)
+		writeCmdState(EXECUTING, NO_EXIT_YET)
+		exit_code := executeCommand()
+		writeCmdState(DONE, exit_code)
 
 	case WAITING, EXECUTING:
 
@@ -60,8 +58,11 @@ func main() {
 		)
 
 		waitForExec(jsonContents)
-		executeCommand()
-		writeCmdIDFile(DONE)
+
+		color.Green("Executing....")
+		exit_code := executeCommand()
+
+		writeCmdState(DONE, exit_code)
 
 	}
 	cleanUP()

@@ -49,7 +49,6 @@ but I usually find myself using `sleep` to wait for a command to execute in anot
 
 
 ## Manual compile and install 
-- `go get github.com/fatih/color` 
 - `go build .`
 - `cp dchn /usr/bin`
 
@@ -80,9 +79,7 @@ and after they are done they delete the cmdID.json of their parent
 
 # todo
 - manpage also
-
-
-### color scheme 
-blue -> info
-red -> critical
-purple -> help
+- support commands with `&&` (just feed them into bash -c lol)
+- smart check for no commandID by checking executables in bash against args[0]
+- return actual exit code instead of just one
+- cleanup routine (do we even need that?)
