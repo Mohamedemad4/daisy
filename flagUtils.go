@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,26 @@ func printUsage() {
 	blue.Fprintf(flag.CommandLine.Output(), "In second terminal: dchn cmd1 apt upgrade \n\n")
 	flag.PrintDefaults()
 	magenta.Fprintf(flag.CommandLine.Output(), "\nman dchn for more details \n")
+	os.Exit(2)
+}
+
+// check if the program exists in path
+func checkIfInPath(name string) bool {
+	for _, path_dir := range strings.Split(os.Getenv("PATH"), ":") {
+		progs, err := ioutil.ReadDir(path_dir)
+
+		if err != nil {
+			color.Red("unable to read from path at %s", path_dir)
+		}
+
+		for _, prog := range progs {
+			if prog.Name() == name {
+				return true
+			}
+		}
+	}
+	return false
+
 }
 
 func handleFlags() {
@@ -39,16 +60,19 @@ func handleFlags() {
 
 	if len(flag.Args()) < 2 {
 		printUsage()
-		os.Exit(2)
 	}
 
 	if !(chain_mode == MODE_OR || chain_mode == MODE_AND || chain_mode == MODE_NOT) {
 		printUsage()
-		os.Exit(2)
 	}
 
 	cmdID = flag.Args()[0]
 	cmd = flag.Args()[1:]
+
+	if !checkIfInPath(cmd[0]) {
+		color.Red("Unable to find program:%s in path, are you sure you specified a cmdID?\n\n", color.GreenString(cmd[0]))
+		printUsage()
+	}
 
 	logger.Debugf("mode: " + chain_mode)
 	logger.Debugf("cmdID: " + cmdID)

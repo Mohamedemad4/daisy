@@ -80,6 +80,7 @@ and after they are done they delete the cmdID.json of their parent
 # todo
 - manpage also
 - support commands with `&&` (just feed them into bash -c lol)
-- smart check for no commandID by checking executables in bash against args[0]
 - return actual exit code instead of just one
 - cleanup routine (do we even need that?)
+- implement `--after` mode
+- install script
